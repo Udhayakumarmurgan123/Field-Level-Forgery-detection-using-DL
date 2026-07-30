@@ -1,0 +1,11 @@
+names:
+  0: name
+  1: dob
+  2: id_number
+  3: address
+  4: photo
+  5: signature
+path: /home/claude/doc-forgery/data/yolo
+test: images/test
+train: images/train
+val: images/val

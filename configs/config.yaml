@@ -1,0 +1,47 @@
+# Field-Level Explainable Document Forgery Detection - central config
+
+fields:
+  - name
+  - dob
+  - id_number
+  - address
+  - photo
+  - signature
+
+forgery_types:
+  - none
+  - text_replacement
+  - font_modification
+  - spacing_modification
+  - copy_paste
+  - image_region_replacement
+
+paths:
+  dataset_root: data/raw
+  yolo_dataset_root: data/yolo
+  checkpoints: outputs/checkpoints
+  audit: outputs/audit
+  annotated: outputs/annotated
+
+synthetic:
+  num_documents: 120
+  image_width: 900
+  image_height: 560
+  train_split: 0.8
+  seed: 42
+
+yolo:
+  model: outputs/checkpoints/yolov8n.pt
+  imgsz: 320
+  epochs: 8
+  batch: 8
+  device: cpu
+
+evidence:
+  ela_quality: 90
+  noise_block_size: 16
+  edge_threshold_low: 50
+  edge_threshold_high: 150
+
+forgery_classifier:
+  model_path: outputs/checkpoints/field_forgery_classifier.joblib

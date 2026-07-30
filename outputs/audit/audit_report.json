@@ -1,0 +1,41 @@
+{
+  "total_documents": 240,
+  "split_counts": {
+    "train": 192,
+    "val": 22,
+    "test": 26
+  },
+  "label_counts": {
+    "genuine": 120,
+    "forged": 120
+  },
+  "split_label_counts": {
+    "train": {
+      "genuine": 96,
+      "forged": 96
+    },
+    "val": {
+      "genuine": 11,
+      "forged": 11
+    },
+    "test": {
+      "genuine": 13,
+      "forged": 13
+    }
+  },
+  "field_tamper_rate": {
+    "photo": 0.0708,
+    "name": 0.0833,
+    "dob": 0.0667,
+    "id_number": 0.0833,
+    "address": 0.1,
+    "signature": 0.0958
+  },
+  "forgery_type_counts": {
+    "font_modification": 15,
+    "text_replacement": 25,
+    "spacing_modification": 19,
+    "image_region_replacement": 40,
+    "copy_paste": 21
+  }
+}

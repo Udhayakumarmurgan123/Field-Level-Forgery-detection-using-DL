@@ -1,0 +1,26 @@
+=== Dataset Audit Report ===
+Total documents: 240
+
+Split sizes:
+  train: 192  ({'genuine': 96, 'forged': 96})
+  val: 22  ({'genuine': 11, 'forged': 11})
+  test: 26  ({'genuine': 13, 'forged': 13})
+
+Overall genuine/forged balance:
+  genuine: 120
+  forged: 120
+
+Per-field tamper rate (fraction of documents where this field is tampered):
+  photo: 7.08%
+  name: 8.33%
+  dob: 6.67%
+  id_number: 8.33%
+  address: 10.00%
+  signature: 9.58%
+
+Forgery type distribution (count of tampered fields by type):
+  font_modification: 15
+  text_replacement: 25
+  spacing_modification: 19
+  image_region_replacement: 40
+  copy_paste: 21
