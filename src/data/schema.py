@@ -67,15 +67,29 @@ class FieldAnnotation:
     forgery_type: str                     # one of FORGERY_TYPES ("none" if not tampered)
     evidence: list[EvidenceAnnotation] = field(default_factory=list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        self._validate_field_name()
+        self._validate_forgery_type()
+        self._validate_consistency()
+
+    def _validate_field_name(self) -> None:
         if self.field_name not in FIELD_NAMES:
             raise ValueError(f"Unknown field_name '{self.field_name}'")
+
+    def _validate_forgery_type(self) -> None:
         if self.forgery_type not in FORGERY_TYPES:
             raise ValueError(f"Unknown forgery_type '{self.forgery_type}'")
-        if self.is_tampered and self.forgery_type == "none":
-            raise ValueError("Tampered field must have a forgery_type other than 'none'")
-        if not self.is_tampered and self.forgery_type != "none":
-            raise ValueError("Non-tampered field must have forgery_type == 'none'")
+
+    def _validate_consistency(self) -> None:
+        # Tampered fields must have a forgery_type other than "none"
+        # Non‑tampered fields must have forgery_type == "none"
+        if (self.is_tampered and self.forgery_type == "none") or (
+            not self.is_tampered and self.forgery_type != "none"
+        ):
+            raise ValueError(
+                "Inconsistent tampering state: "
+                f"is_tampered={self.is_tampered}, forgery_type='{self.forgery_type}'"
+            )
 
 
 @dataclass
