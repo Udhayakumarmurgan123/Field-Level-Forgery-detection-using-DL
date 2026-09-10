@@ -15,6 +15,7 @@ function signature once GPU is available (see docs/vlm_plan.md).
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import List
 
 from src.evidence_extraction.classical_evidence import EvidenceSignal
 
@@ -55,7 +56,8 @@ class FieldExplanation:
     explanation: str
 
 
-def infer_likely_forgery_type(signals: list[EvidenceSignal]) -> str:
+def infer_likely_forgery_type(signals: List[EvidenceSignal]) -> str:
+    """Return the most probable forgery type based on evidence signals."""
     if not signals:
         return "none"
     dominant = max(signals, key=lambda s: s.score)
@@ -68,8 +70,9 @@ def generate_field_explanation(
     field_name: str,
     is_tampered: bool,
     confidence: float,
-    signals: list[EvidenceSignal],
+    signals: List[EvidenceSignal],
 ) -> FieldExplanation:
+    """Create a human‑readable explanation for a single field."""
     display = FIELD_DISPLAY_NAME.get(field_name, field_name)
 
     if not is_tampered:
@@ -106,12 +109,39 @@ def generate_field_explanation(
     )
 
 
-def generate_document_summary(field_explanations: list[FieldExplanation]) -> str:
-    tampered = [f for f in field_explanations if f.is_tampered]
+# ---------------------------------------------------------------------------
+# Helper functions – extracted to lower cyclomatic complexity of the public API
+# ---------------------------------------------------------------------------
+
+def _tampered_fields(field_explanations: List[FieldExplanation]) -> List[FieldExplanation]:
+    """Filter the explanations to only those that were flagged as tampered."""
+    return [f for f in field_explanations if f.is_tampered]
+
+
+def _format_field_names(tampered: List[FieldExplanation]) -> str:
+    """Create a comma‑separated string of display names for the tampered fields."""
+    return ", ".join(FIELD_DISPLAY_NAME.get(f.field_name, f.field_name) for f in tampered)
+
+
+def _highest_confidence(tampered: List[FieldExplanation]) -> float:
+    """Return the maximum confidence value among the tampered fields."""
+    return max(f.confidence for f in tampered)
+
+
+def generate_document_summary(field_explanations: List[FieldExplanation]) -> str:
+    """
+    Produce a concise summary of the document based on field‑level explanations.
+
+    The function now delegates distinct responsibilities to small helpers,
+    reducing its own cyclomatic complexity to a single decision point.
+    """
+    tampered = _tampered_fields(field_explanations)
     if not tampered:
         return "No fields showed evidence of tampering. This document appears genuine."
-    names = ", ".join(FIELD_DISPLAY_NAME.get(f.field_name, f.field_name) for f in tampered)
-    max_conf = max(f.confidence for f in tampered)
+
+    names = _format_field_names(tampered)
+    max_conf = _highest_confidence(tampered)
+
     return (
         f"This document appears FORGED. {len(tampered)} field(s) flagged: {names}. "
         f"Highest-confidence finding: {max_conf:.1%}."
