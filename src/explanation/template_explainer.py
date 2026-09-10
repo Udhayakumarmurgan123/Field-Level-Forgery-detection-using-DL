@@ -106,12 +106,46 @@ def generate_field_explanation(
     )
 
 
+# ---------------------------------------------------------------------------
+# Helper functions for document‑level summary (extracted to reduce cyclomatic
+# complexity)
+# ---------------------------------------------------------------------------
+
+def _get_tampered_fields(field_explanations: list[FieldExplanation]) -> list[FieldExplanation]:
+    """Return only the explanations that indicate tampering."""
+    return [f for f in field_explanations if f.is_tampered]
+
+
+def _format_no_tamper_message() -> str:
+    """Message used when no fields are flagged as tampered."""
+    return "No fields showed evidence of tampering. This document appears genuine."
+
+
+def _build_tampered_field_names(tampered: list[FieldExplanation]) -> str:
+    """Comma‑separated display names for tampered fields."""
+    return ", ".join(FIELD_DISPLAY_NAME.get(f.field_name, f.field_name) for f in tampered)
+
+
+def _max_confidence(tampered: list[FieldExplanation]) -> float:
+    """Highest confidence among tampered fields."""
+    return max(f.confidence for f in tampered)
+
+
 def generate_document_summary(field_explanations: list[FieldExplanation]) -> str:
-    tampered = [f for f in field_explanations if f.is_tampered]
+    """
+    Produce a short, human‑readable summary of the document's tampering status.
+
+    The function now delegates distinct responsibilities to private helpers,
+    reducing its cyclomatic complexity.
+    """
+    tampered = _get_tampered_fields(field_explanations)
+
     if not tampered:
-        return "No fields showed evidence of tampering. This document appears genuine."
-    names = ", ".join(FIELD_DISPLAY_NAME.get(f.field_name, f.field_name) for f in tampered)
-    max_conf = max(f.confidence for f in tampered)
+        return _format_no_tamper_message()
+
+    names = _build_tampered_field_names(tampered)
+    max_conf = _max_confidence(tampered)
+
     return (
         f"This document appears FORGED. {len(tampered)} field(s) flagged: {names}. "
         f"Highest-confidence finding: {max_conf:.1%}."
