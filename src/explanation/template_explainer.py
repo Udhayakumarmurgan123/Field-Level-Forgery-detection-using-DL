@@ -55,6 +55,20 @@ class FieldExplanation:
     explanation: str
 
 
+# --------------------------------------------------------------------------- #
+# Parameter object to replace the long parameter list of `generate_field_explanation`
+# --------------------------------------------------------------------------- #
+@dataclass
+class FieldInput:
+    """
+    Groups together all data required to generate an explanation for a single field.
+    """
+    field_name: str
+    is_tampered: bool
+    confidence: float
+    signals: list[EvidenceSignal]
+
+
 def infer_likely_forgery_type(signals: list[EvidenceSignal]) -> str:
     if not signals:
         return "none"
@@ -64,12 +78,18 @@ def infer_likely_forgery_type(signals: list[EvidenceSignal]) -> str:
     return EVIDENCE_TO_LIKELY_TYPE.get(dominant.evidence_type, "text_replacement")
 
 
-def generate_field_explanation(
-    field_name: str,
-    is_tampered: bool,
-    confidence: float,
-    signals: list[EvidenceSignal],
-) -> FieldExplanation:
+def generate_field_explanation(field_input: FieldInput) -> FieldExplanation:
+    """
+    Produce a human‑readable explanation for a field based on tampering evidence.
+
+    The function now accepts a single `FieldInput` instance, eliminating the
+    previous long‑parameter list.
+    """
+    field_name = field_input.field_name
+    is_tampered = field_input.is_tampered
+    confidence = field_input.confidence
+    signals = field_input.signals
+
     display = FIELD_DISPLAY_NAME.get(field_name, field_name)
 
     if not is_tampered:
