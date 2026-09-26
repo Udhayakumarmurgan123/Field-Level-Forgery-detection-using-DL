@@ -90,7 +90,9 @@ def generate_field_explanation(
     top_signals = sorted(signals, key=lambda s: s.score, reverse=True)[:2]
     signal_phrases = [f"{s.description}" for s in top_signals if s.score > 0.2]
     if not signal_phrases:
-        signal_phrases = ["the combination of low-level pixel signals crossed the tampering threshold"]
+        signal_phrases = [
+            "the combination of low-level pixel signals crossed the tampering threshold"
+        ]
 
     explanation = (
         f"{display} is flagged as tampered ({FORGERY_TYPE_DISPLAY.get(likely_type, likely_type)}, "
@@ -106,12 +108,32 @@ def generate_field_explanation(
     )
 
 
+def _tampered_fields(field_explanations: list[FieldExplanation]) -> list[FieldExplanation]:
+    """Return only the explanations that indicate tampering."""
+    return [f for f in field_explanations if f.is_tampered]
+
+
+def _joined_field_names(tampered: list[FieldExplanation]) -> str:
+    """Human‑readable list of tampered field display names."""
+    return ", ".join(
+        FIELD_DISPLAY_NAME.get(f.field_name, f.field_name) for f in tampered
+    )
+
+
+def _highest_confidence(tampered: list[FieldExplanation]) -> float:
+    """Maximum confidence among tampered fields."""
+    return max(f.confidence for f in tampered)
+
+
 def generate_document_summary(field_explanations: list[FieldExplanation]) -> str:
-    tampered = [f for f in field_explanations if f.is_tampered]
+    """Create a short summary describing the document’s tampering status."""
+    tampered = _tampered_fields(field_explanations)
     if not tampered:
         return "No fields showed evidence of tampering. This document appears genuine."
-    names = ", ".join(FIELD_DISPLAY_NAME.get(f.field_name, f.field_name) for f in tampered)
-    max_conf = max(f.confidence for f in tampered)
+
+    names = _joined_field_names(tampered)
+    max_conf = _highest_confidence(tampered)
+
     return (
         f"This document appears FORGED. {len(tampered)} field(s) flagged: {names}. "
         f"Highest-confidence finding: {max_conf:.1%}."
