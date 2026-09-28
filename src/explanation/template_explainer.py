@@ -106,12 +106,38 @@ def generate_field_explanation(
     )
 
 
+# ---------------------------------------------------------------------------
+# Helper functions – extracted to lower cyclomatic complexity of the public API
+# ---------------------------------------------------------------------------
+
+def _extract_tampered_fields(field_explanations: list[FieldExplanation]) -> list[FieldExplanation]:
+    """Return only those field explanations that indicate tampering."""
+    return [f for f in field_explanations if f.is_tampered]
+
+
+def _format_tampered_names(tampered: list[FieldExplanation]) -> str:
+    """Create a comma‑separated list of human‑readable field names."""
+    return ", ".join(FIELD_DISPLAY_NAME.get(f.field_name, f.field_name) for f in tampered)
+
+
+def _max_confidence(tampered: list[FieldExplanation]) -> float:
+    """Return the highest confidence among the tampered fields."""
+    return max(f.confidence for f in tampered)
+
+
 def generate_document_summary(field_explanations: list[FieldExplanation]) -> str:
-    tampered = [f for f in field_explanations if f.is_tampered]
+    """
+    Produce a concise summary describing whether the document appears forged.
+
+    This function now delegates distinct responsibilities to tiny helpers,
+    keeping its own cyclomatic complexity low.
+    """
+    tampered = _extract_tampered_fields(field_explanations)
     if not tampered:
         return "No fields showed evidence of tampering. This document appears genuine."
-    names = ", ".join(FIELD_DISPLAY_NAME.get(f.field_name, f.field_name) for f in tampered)
-    max_conf = max(f.confidence for f in tampered)
+
+    names = _format_tampered_names(tampered)
+    max_conf = _max_confidence(tampered)
     return (
         f"This document appears FORGED. {len(tampered)} field(s) flagged: {names}. "
         f"Highest-confidence finding: {max_conf:.1%}."
