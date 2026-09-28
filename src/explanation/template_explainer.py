@@ -106,13 +106,40 @@ def generate_field_explanation(
     )
 
 
-def generate_document_summary(field_explanations: list[FieldExplanation]) -> str:
-    tampered = [f for f in field_explanations if f.is_tampered]
-    if not tampered:
-        return "No fields showed evidence of tampering. This document appears genuine."
-    names = ", ".join(FIELD_DISPLAY_NAME.get(f.field_name, f.field_name) for f in tampered)
+# --------------------------------------------------------------------------- #
+# Helper functions to lower cyclomatic complexity of `generate_document_summary`
+# --------------------------------------------------------------------------- #
+
+def _tampered_fields(field_explanations: list[FieldExplanation]) -> list[FieldExplanation]:
+    """Return only those fields that were flagged as tampered."""
+    return [f for f in field_explanations if f.is_tampered]
+
+
+def _format_no_tamper_message() -> str:
+    """Message shown when no tampering is detected."""
+    return "No fields showed evidence of tampering. This document appears genuine."
+
+
+def _format_summary_message(tampered: list[FieldExplanation]) -> str:
+    """Construct the summary for a document with tampered fields."""
+    names = ", ".join(
+        FIELD_DISPLAY_NAME.get(f.field_name, f.field_name) for f in tampered
+    )
     max_conf = max(f.confidence for f in tampered)
     return (
         f"This document appears FORGED. {len(tampered)} field(s) flagged: {names}. "
         f"Highest-confidence finding: {max_conf:.1%}."
     )
+
+
+def generate_document_summary(field_explanations: list[FieldExplanation]) -> str:
+    """
+    Produce a high‑level summary for a document based on per‑field explanations.
+
+    The function now delegates distinct responsibilities to private helpers,
+    keeping its own cyclomatic complexity at 1 (a single guard clause).
+    """
+    tampered = _tampered_fields(field_explanations)
+    if not tampered:
+        return _format_no_tamper_message()
+    return _format_summary_message(tampered)
